@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "eridu-world-object-host", "eridu-world-object-host\eridu-world-object-host.csproj", "{2994A687-3C8A-47FF-A427-FE6B72A3776F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "eridu-world-object-model", "eridu-world-object-model\eridu-world-object-model.csproj", "{3B93BEC8-1477-46CE-BDD5-EEE09F9F786A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AFB2A819-4BE8-4B03-8825-0E44AC1DCEFF}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2994A687-3C8A-47FF-A427-FE6B72A3776F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2994A687-3C8A-47FF-A427-FE6B72A3776F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2994A687-3C8A-47FF-A427-FE6B72A3776F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2994A687-3C8A-47FF-A427-FE6B72A3776F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B93BEC8-1477-46CE-BDD5-EEE09F9F786A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B93BEC8-1477-46CE-BDD5-EEE09F9F786A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B93BEC8-1477-46CE-BDD5-EEE09F9F786A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B93BEC8-1477-46CE-BDD5-EEE09F9F786A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {65F2593D-1CB8-47E8-97FD-08F1CF0352C5}
+	EndGlobalSection
+EndGlobal

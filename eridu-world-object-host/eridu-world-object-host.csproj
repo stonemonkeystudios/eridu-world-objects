@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>8ca182d0-5c14-4785-b7c6-9220bdef79eb</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <OutputType>Exe</OutputType>
+	<DockerfileRunArguments>-p 443:443</DockerfileRunArguments>
+	   <DockerFileBuildArguments>--no-cache --pull</DockerFileBuildArguments>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.46.0" />
+    <PackageReference Include="MagicOnion.Server" Version="4.5.0" />
+    <PackageReference Include="MagicOnion.Server.HttpGateway" Version="4.5.0" />
+    <PackageReference Include="MessagePack.UnityShims" Version="2.4.14-alpha" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.0-preview.4.22229.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.15.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\eridu-world-object-model\eridu-world-object-model.csproj" Version="1.0.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="..\.dockerignore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="HQDotNet.Model">
+      <HintPath>\libs\HQDotNet.Model.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

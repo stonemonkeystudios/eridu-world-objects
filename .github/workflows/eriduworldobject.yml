@@ -1,0 +1,85 @@
+name: Build and deploy .NET application to container app eridupresence
+on:
+  push:
+    branches:
+    - dev
+    - main
+env:
+  CONTAINER_APP_CONTAINER_NAME: eriduworldobjects
+  CONTAINER_APP_NAME: eriduworldobjects
+  CONTAINER_APP_RESOURCE_GROUP_NAME: Eridu_rg
+  CONTAINER_REGISTRY_LOGIN_SERVER: eridupresence.azurecr.io
+  DOCKER_FILE_PATH: eridu-world-objects-host/Dockerfile
+  PROJECT_NAME_FOR_DOCKER: eridu-world-objects-host
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout to the branch
+      uses: actions/checkout@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Log in to container registry
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.eriduworldobjects_USERNAME_FFFF }}
+        password: ${{ secrets.eriduworldobjects_PASSWORD_FFFF }}
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v2
+      with: 
+        push: true
+        tags: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}
+        file: ${{ env.DOCKER_FILE_PATH }}
+    - name: Store Artifacts
+      uses: actions/upload-artifact@v3
+      with: 
+        name: eridu-presence-model-generated
+        path: ${{ github.workspace }}/output/Generated/*
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.eridupresence_SPN }}
+    - name: Deploy to containerapp
+      uses: azure/CLI@v1
+      with:
+        inlineScript: >
+          az config set extension.use_dynamic_install=yes_without_prompt
+
+          az containerapp registry set --name ${{ env.CONTAINER_APP_NAME }} --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} --server ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }} --username ${{ secrets.eriduworldobjects_USERNAME_FFFF }} --password ${{ secrets.eriduworldobjects_PASSWORD_FFFF }}
+
+          az containerapp update --name ${{ env.CONTAINER_APP_NAME }} --container-name ${{ env.CONTAINER_APP_CONTAINER_NAME }} --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} --image ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.PROJECT_NAME_FOR_DOCKER }}:${{ github.sha }}
+    
+          az containerapp ingress enable --name ${{ env.CONTAINER_APP_NAME }} --resource-group ${{ env.CONTAINER_APP_RESOURCE_GROUP_NAME }} --target-port 443 --transport http2 --type external
+    - name: logout
+      run: >
+        az logout
+
+  
+  #pull-request-eridu:
+  #  runs-on: ubuntu-latest
+  #  needs: build
+  #  steps:
+  #  - name: Checkout to the branch
+  #    uses: actions/checkout@v2
+  #  - name: Download artifacts
+  #    uses: actions/download-artifact@v3
+  #    with: 
+  #      name: eridu-presence-model-generated
+  #  - name: Create pull request to Eridu
+  #    uses: paygoc6/action-pull-request-another-repo@v1.0.1
+  #    env:
+  #      API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+  #    with:
+  #      source_folder: 'output/Generated'
+  #      destination_repo: 'stonemonkeystudios/eridu'
+  #      destination_folder: 'Assets/eridu-presence/ModelShared'
+  #      destination_base_branch: 'dev'
+  #      destination_head_branch: 'eridu-presence-model'
+  #      user_email: 'stonemonkeygames@gmail.com'
+  #      user_name: 'stonemonkeystudios'
+  #      pull_request_reviewers: 'reviewers'
