@@ -14,17 +14,17 @@ namespace Eridu.WorldObjects {
         //IInMemoryStorage<WorldObject> _worldObjectStorage;
 
         //TODO: Get this from a persistent source like a DB
-        List<WorldObject> _worldObjects = new List<WorldObject>();
+        IInMemoryStorage<WorldObjectOwner> _ownerStorage;
+        IInMemoryStorage<WorldObject> _worldObjectsStorage;
 
-        #region IPresenceHub Methods
+        #region IWorldObjectHubCH Methods
 
         public async Task<WorldObject[]> JoinAsync(string roomName) {
 
             //Group can bundle many connections and it has inmemory-storage so add any type per group
             (room) = await Group.AddAsync(roomName);
 
-            return _worldObjects.ToArray();
-            //return _worldObjectStorage.AllValues.ToArray();
+            return _worldObjectsStorage.AllValues.ToArray();
         }
 
         public async Task LeaveAsync() {
@@ -41,54 +41,98 @@ namespace Eridu.WorldObjects {
             return CompletedTask;
         }
 
-        Task IWorldObjectHub.SpawnWorldObject(WorldObject worldObject, Matrix4x4[] transforms) {
+        async Task IWorldObjectHub.SpawnWorldObject(WorldObject worldObject, Matrix4x4[] transforms) {
             //TODO: Check authoritative client
 
-            //TODO: Pass along all existing world objects.
-            if (_worldObjects.Contains(worldObject)) {
+            //Are we already tracking this id?
+            var wo = GetExistingWorldObject(worldObject);
+
+            if (wo != null) {
                 Console.WriteLine("Tried to spawn an existing world object");
             }
             else {
-                _worldObjects.Add(worldObject);
-
-                Broadcast(room).OnSpawnWorldObject(worldObject, transforms);
+                (room, _worldObjectsStorage) = await Group.AddAsync(room.GroupName, worldObject);
+                BroadcastExceptSelf(room).OnSpawnWorldObject(worldObject, transforms);
             }
-            return Task.CompletedTask;
         }
 
         Task IWorldObjectHub.PlayAnimation(WorldObject worldObject, string animationName) {
-            if (!_worldObjects.Contains(worldObject)) {
+
+            var wo = GetExistingWorldObject(worldObject);
+            if(wo == null) {
                 Console.WriteLine("Could not find a world object to play an animation on.");
             }
             else {
-                Broadcast(room).OnPlayAnimation(worldObject, animationName);
+                BroadcastExceptSelf(room).OnPlayAnimation(worldObject, animationName);
             }
             return Task.CompletedTask;
         }
 
         Task IWorldObjectHub.DestroyWorldObject(WorldObject worldObject) {
 
-            if (!_worldObjects.Contains(worldObject)) {
-                Console.WriteLine("Couldn't find a world object to destroy");
-            }
-            else {
-                _worldObjects.Remove(worldObject);
+            var wo = GetExistingWorldObject(worldObject);
 
-                Broadcast(room).OnDestroyWorldObject(worldObject);
+            WorldObjectOwner owner = GetExistingOwner(worldObject);
+
+            //The object exists in the scene
+            if (wo != null) {
+                if(owner != null) {
+                    DoReleaseOwner(worldObject, owner.OwnerUserId);
+                }
+                //Remove it from storate
+                _worldObjectsStorage.AllValues.Remove(wo);
+                BroadcastExceptSelf(room).OnDestroyWorldObject(worldObject);
             }
             return Task.CompletedTask;
         }
 
         Task IWorldObjectHub.MoveTransforms(WorldObject worldObject, Matrix4x4[] transforms) {
-            if (!_worldObjects.Contains(worldObject)) {
+            var wo = GetExistingWorldObject(worldObject);
+            if(wo == null){
                 Console.WriteLine("Could not find a world object to move.");
             }
             else {
-                Broadcast(room).OnDestroyWorldObject(worldObject);
-                //BroadcastExceptSelf(room).OnMoveTransforms(worldObjectInstanceId, transforms);
+                //Broadcast(room).OnDestroyWorldObject(worldObject);
+                BroadcastExceptSelf(room).OnMoveTransforms(worldObject, transforms);
             }
             return Task.CompletedTask;
 
+        }
+        async Task<bool> IWorldObjectHub.TakeOwnership(WorldObject worldObject, int playerId) {
+
+            //Does an owner exist already?
+            foreach( var key in _ownerStorage.AllValues){
+                if(key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
+                    //This object is already owned
+                    return false;
+                }
+            }
+
+            bool found = false;
+            //Does the object actually exist in the scene
+            foreach(var key in _worldObjectsStorage.AllValues) {
+                if(key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                Console.WriteLine("No matching world object found in storage.");
+                return false;
+            }
+
+            //If not, take ownership
+            WorldObjectOwner owner = new WorldObjectOwner();
+            owner.WorldObjectInstanceId = worldObject.WorldObjectInstanceId;
+            owner.OwnerUserId = playerId;
+            (room, _ownerStorage) = await Group.AddAsync(room.GroupName, owner);
+            Broadcast(room).OnTakeOwnership(worldObject, playerId);
+            return true;
+        }
+
+        async Task IWorldObjectHub.ReleaseOwnership(WorldObject worldObject, int playerId) {
+            DoReleaseOwner(worldObject, playerId);
         }
 
         public IWorldObjectHub FireAndForget() {
@@ -101,6 +145,58 @@ namespace Eridu.WorldObjects {
 
         public Task WaitForDisconnect() {
             return Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        async void DoReleaseOwner(WorldObject worldObject, int playerId) {
+            bool found = false;
+            foreach (var key in _ownerStorage.AllValues) {
+                if (key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
+                    //This object is already owned
+                    found = true;
+                }
+            }
+
+            if (found) {
+                WorldObjectOwner owner = null;
+
+                //Is the owner of the object the one we knew about?
+                //TODO: If we are authoritative, then force remove the object
+                foreach (var key in _ownerStorage.AllValues) {
+                    if (key.WorldObjectInstanceId == worldObject?.WorldObjectInstanceId &&
+                        key.OwnerUserId == playerId) {
+                        owner = key;
+                    }
+                }
+                if (owner != null) {
+                    _ownerStorage.AllValues.Remove(owner);
+                }
+
+                BroadcastExceptSelf(room).OnReleaseOwnership(worldObject);
+            }
+
+        }
+
+        private WorldObject GetExistingWorldObject(WorldObject worldObject) {
+            //Does the object actually exist in the scene
+            foreach (var key in _worldObjectsStorage.AllValues) {
+                if (key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
+                    return key;
+                }
+            }
+            return null;
+        }
+
+        private WorldObjectOwner GetExistingOwner(WorldObject worldObject) {
+            foreach (var key in _ownerStorage.AllValues) {
+                if (key.WorldObjectInstanceId == worldObject?.WorldObjectInstanceId) {
+                    return key;
+                }
+            }
+            return null;
         }
         #endregion
     }

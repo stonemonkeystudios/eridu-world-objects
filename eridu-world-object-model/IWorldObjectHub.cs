@@ -16,6 +16,8 @@ namespace Eridu.WorldObjects
         void OnPlayAnimation(WorldObject worldObject, string animationName);
         void OnDestroyWorldObject(WorldObject worldObject);
         void OnMoveTransforms(WorldObject worldObject, Matrix4x4[] transforms);
+        void OnTakeOwnership(WorldObject worldObject, int playerId);
+        void OnReleaseOwnership(WorldObject worldObject);
     }
 
     public interface IWorldObjectHub : IStreamingHub<IWorldObjectHub, IWorldObjectHubReceiver> {
@@ -25,14 +27,24 @@ namespace Eridu.WorldObjects
         Task PlayAnimation(WorldObject worldObject, string animationName);
         Task DestroyWorldObject(WorldObject worldObject);
         Task MoveTransforms(WorldObject worldObject, Matrix4x4[] transforms);
+        Task<bool> TakeOwnership(WorldObject worldObject, int playerId);
+        Task ReleaseOwnership(WorldObject worldObject, int playerId);
         Task LeaveAsync();
     }
 
     [MessagePackObject]
     public class WorldObject {
         [Key(0)]
-        public int WorldObjectDbId { get; set; }
+        public string WorldObjectDbId { get; set; }
         [Key(1)]
         public int WorldObjectInstanceId { get; set; }
+    }
+
+    [MessagePackObject]
+    public class WorldObjectOwner {
+        [Key(0)]
+        public int WorldObjectInstanceId { get; set; }
+        [Key(1)]
+        public int OwnerUserId { get; set; }
     }
 }
