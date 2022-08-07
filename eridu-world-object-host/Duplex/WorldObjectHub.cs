@@ -11,11 +11,8 @@ namespace Eridu.WorldObjects {
     [GroupConfiguration(typeof(ConcurrentDictionaryGroupRepositoryFactory))]
     public class WorldObjectHub : StreamingHubBase<IWorldObjectHub, IWorldObjectHubReceiver>, IWorldObjectHub {
         IGroup room;
-        //IInMemoryStorage<WorldObject> _worldObjectStorage;
 
-        //TODO: Get this from a persistent source like a DB
-        IInMemoryStorage<WorldObjectOwner> _ownerStorage;
-        IInMemoryStorage<WorldObject> _worldObjectsStorage;
+        List<WorldObject> _worldObjectsStorage = new List<WorldObject>();
 
         #region IWorldObjectHubCH Methods
 
@@ -23,8 +20,8 @@ namespace Eridu.WorldObjects {
 
             //Group can bundle many connections and it has inmemory-storage so add any type per group
             (room) = await Group.AddAsync(roomName);
-
-            return _worldObjectsStorage.AllValues.ToArray();
+            
+            return _worldObjectsStorage.ToArray();
         }
 
         public async Task LeaveAsync() {
@@ -51,7 +48,7 @@ namespace Eridu.WorldObjects {
                 Console.WriteLine("Tried to spawn an existing world object");
             }
             else {
-                (room, _worldObjectsStorage) = await Group.AddAsync(room.GroupName, worldObject);
+                _worldObjectsStorage.Add(worldObject);
                 BroadcastExceptSelf(room).OnSpawnWorldObject(worldObject, transforms);
             }
         }
@@ -72,15 +69,13 @@ namespace Eridu.WorldObjects {
 
             var wo = GetExistingWorldObject(worldObject);
 
-            WorldObjectOwner owner = GetExistingOwner(worldObject);
-
             //The object exists in the scene
             if (wo != null) {
-                if(owner != null) {
-                    DoReleaseOwner(worldObject, owner.OwnerUserId);
+                if(wo.Owned != null) {
+                    DoReleaseOwner(worldObject, worldObject.OwnerId);
                 }
                 //Remove it from storate
-                _worldObjectsStorage.AllValues.Remove(wo);
+                _worldObjectsStorage.Remove(worldObject);
                 BroadcastExceptSelf(room).OnDestroyWorldObject(worldObject);
             }
             return Task.CompletedTask;
@@ -101,8 +96,8 @@ namespace Eridu.WorldObjects {
         async Task<bool> IWorldObjectHub.TakeOwnership(WorldObject worldObject, int playerId) {
 
             //Does an owner exist already?
-            foreach( var key in _ownerStorage.AllValues){
-                if(key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
+            foreach( var key in _worldObjectsStorage){
+                if(key.InstanceId == worldObject.InstanceId && worldObject.Owned) {
                     //This object is already owned
                     return false;
                 }
@@ -110,8 +105,8 @@ namespace Eridu.WorldObjects {
 
             bool found = false;
             //Does the object actually exist in the scene
-            foreach(var key in _worldObjectsStorage.AllValues) {
-                if(key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
+            foreach(var key in _worldObjectsStorage) {
+                if(key.InstanceId == worldObject.InstanceId) {
                     found = true;
                     break;
                 }
@@ -123,10 +118,8 @@ namespace Eridu.WorldObjects {
             }
 
             //If not, take ownership
-            WorldObjectOwner owner = new WorldObjectOwner();
-            owner.WorldObjectInstanceId = worldObject.WorldObjectInstanceId;
-            owner.OwnerUserId = playerId;
-            (room, _ownerStorage) = await Group.AddAsync(room.GroupName, owner);
+            worldObject.Owned = true;
+            worldObject.OwnerId = playerId;
             Broadcast(room).OnTakeOwnership(worldObject, playerId);
             return true;
         }
@@ -152,47 +145,23 @@ namespace Eridu.WorldObjects {
         #region Private Methods
 
         async void DoReleaseOwner(WorldObject worldObject, int playerId) {
-            bool found = false;
-            foreach (var key in _ownerStorage.AllValues) {
-                if (key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
-                    //This object is already owned
-                    found = true;
-                }
-            }
-
-            if (found) {
-                WorldObjectOwner owner = null;
-
-                //Is the owner of the object the one we knew about?
-                //TODO: If we are authoritative, then force remove the object
-                foreach (var key in _ownerStorage.AllValues) {
-                    if (key.WorldObjectInstanceId == worldObject?.WorldObjectInstanceId &&
-                        key.OwnerUserId == playerId) {
-                        owner = key;
+            foreach (var key in _worldObjectsStorage) {
+                if (key.InstanceId == worldObject.InstanceId){
+                    if(key.Owned && key.OwnerId == playerId) {
+                        //This object is owned by the requesting player
+                        key.OwnerId = -1;
+                        key.Owned = false;
+                        BroadcastExceptSelf(room).OnReleaseOwnership(worldObject);
+                        return;
                     }
                 }
-                if (owner != null) {
-                    _ownerStorage.AllValues.Remove(owner);
-                }
-
-                BroadcastExceptSelf(room).OnReleaseOwnership(worldObject);
             }
-
         }
 
         private WorldObject GetExistingWorldObject(WorldObject worldObject) {
             //Does the object actually exist in the scene
-            foreach (var key in _worldObjectsStorage.AllValues) {
-                if (key.WorldObjectInstanceId == worldObject.WorldObjectInstanceId) {
-                    return key;
-                }
-            }
-            return null;
-        }
-
-        private WorldObjectOwner GetExistingOwner(WorldObject worldObject) {
-            foreach (var key in _ownerStorage.AllValues) {
-                if (key.WorldObjectInstanceId == worldObject?.WorldObjectInstanceId) {
+            foreach (var key in _worldObjectsStorage) {
+                if (key.InstanceId == worldObject.InstanceId) {
                     return key;
                 }
             }

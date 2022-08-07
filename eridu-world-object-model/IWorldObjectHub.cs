@@ -35,16 +35,12 @@ namespace Eridu.WorldObjects
     [MessagePackObject]
     public class WorldObject {
         [Key(0)]
-        public string WorldObjectDbId { get; set; }
+        public string DbId { get; set; }
         [Key(1)]
-        public int WorldObjectInstanceId { get; set; }
-    }
-
-    [MessagePackObject]
-    public class WorldObjectOwner {
-        [Key(0)]
-        public int WorldObjectInstanceId { get; set; }
-        [Key(1)]
-        public int OwnerUserId { get; set; }
+        public int InstanceId { get; set; }
+        [Key(2)]
+        public int OwnerId { get; set; }
+        [Key(3)]
+        public bool Owned { get; set; }
     }
 }
