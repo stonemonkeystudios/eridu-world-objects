@@ -12,7 +12,7 @@ namespace Eridu.WorldObjects {
     public class WorldObjectHub : StreamingHubBase<IWorldObjectHub, IWorldObjectHubReceiver>, IWorldObjectHub {
         IGroup room;
 
-        List<WorldObject> _worldObjectsStorage = new List<WorldObject>();
+        List<WorldObject> _worldObjectsStorage = new List<WorldObject>(); 
 
         #region IWorldObjectHubCH Methods
 
