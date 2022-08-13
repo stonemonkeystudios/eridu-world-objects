@@ -20,7 +20,7 @@ namespace Eridu.WorldObjects {
 
             //Group can bundle many connections and it has inmemory-storage so add any type per group
             (room) = await Group.AddAsync(roomName);
-            
+            Broadcast(room).OnJoin(_worldObjectsStorage.ToArray());
             return _worldObjectsStorage.ToArray();
         }
 
@@ -38,7 +38,7 @@ namespace Eridu.WorldObjects {
             return CompletedTask;
         }
 
-        async Task IWorldObjectHub.SpawnWorldObject(WorldObject worldObject, Matrix4x4[] transforms) {
+        async Task IWorldObjectHub.SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms) {
             //TODO: Check authoritative client
 
             //Are we already tracking this id?
@@ -49,7 +49,7 @@ namespace Eridu.WorldObjects {
             }
             else {
                 _worldObjectsStorage.Add(worldObject);
-                BroadcastExceptSelf(room).OnSpawnWorldObject(worldObject, transforms);
+                Broadcast(room).OnSpawnWorldObject(worldObject, transforms);
             }
         }
 
@@ -71,12 +71,12 @@ namespace Eridu.WorldObjects {
 
             //The object exists in the scene
             if (wo != null) {
-                if(wo.Owned != null) {
+                if(wo.Owned) {
                     DoReleaseOwner(worldObject, worldObject.OwnerId);
                 }
                 //Remove it from storate
                 _worldObjectsStorage.Remove(worldObject);
-                BroadcastExceptSelf(room).OnDestroyWorldObject(worldObject);
+                Broadcast(room).OnDestroyWorldObject(worldObject);
             }
             return Task.CompletedTask;
         }
@@ -103,16 +103,9 @@ namespace Eridu.WorldObjects {
                 }
             }
 
-            bool found = false;
-            //Does the object actually exist in the scene
-            foreach(var key in _worldObjectsStorage) {
-                if(key.InstanceId == worldObject.InstanceId) {
-                    found = true;
-                    break;
-                }
-            }
+            var existingObject = GetExistingWorldObject(worldObject);
 
-            if (!found) {
+            if (existingObject == null) {
                 Console.WriteLine("No matching world object found in storage.");
                 return false;
             }
