@@ -8,9 +8,9 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY eridu-presence-host/. eridu-presence-host/
-COPY eridu-presence-model/. eridu-presence-model/
-COPY eridu-presence.sln eridu-presence.sln
+COPY eridu-world-object-host/. eridu-world-object-host/
+COPY eridu-world-object-model/. eridu-world-object-model/
+COPY eridu-world-object.sln eridu-world-object.sln
 RUN dotnet restore
 
 RUN dotnet build  -c Release -o /app/build
@@ -20,4 +20,4 @@ RUN dotnet publish -c Release -o /app/publish
 
 FROM base AS deploy
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "eridu-presence-host.dll"]
+ENTRYPOINT ["dotnet", "eridu-world-object-host.dll"]
