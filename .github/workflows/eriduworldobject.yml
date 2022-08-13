@@ -5,12 +5,12 @@ on:
     - dev
     - main
 env:
-  CONTAINER_APP_CONTAINER_NAME: eriduworldobjects
-  CONTAINER_APP_NAME: eriduworldobjects
+  CONTAINER_APP_CONTAINER_NAME: eriduworldobject
+  CONTAINER_APP_NAME: eriduworldobject
   CONTAINER_APP_RESOURCE_GROUP_NAME: Eridu_rg
   CONTAINER_REGISTRY_LOGIN_SERVER: eridupresence.azurecr.io
-  DOCKER_FILE_PATH: eridu-world-objects-host/Dockerfile
-  PROJECT_NAME_FOR_DOCKER: eridu-world-objects-host
+  DOCKER_FILE_PATH: eridu-world-object-host/Dockerfile
+  PROJECT_NAME_FOR_DOCKER: eridu-world-object-host
 jobs:
   build:
     runs-on: ubuntu-latest
