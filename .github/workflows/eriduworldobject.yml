@@ -43,7 +43,7 @@ jobs:
     - name: Azure Login
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.eridupresence_SPN }}
+        creds: ${{ secrets.eriduworldobject_SPN }}
     - name: Deploy to containerapp
       uses: azure/CLI@v1
       with:
