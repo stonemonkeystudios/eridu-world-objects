@@ -12,16 +12,19 @@ namespace Eridu.WorldObjects {
     public class WorldObjectHub : StreamingHubBase<IWorldObjectHub, IWorldObjectHubReceiver>, IWorldObjectHub {
         IGroup room;
 
-        List<WorldObject> _worldObjectsStorage = new List<WorldObject>(); 
+        List<WorldObject> _worldObjectsStorage = new List<WorldObject>();
+        Dictionary<WorldObject, int> ownedObjects = new Dictionary<WorldObject, int>();
 
         #region IWorldObjectHubCH Methods
 
         public async Task<WorldObject[]> JoinAsync(string roomName) {
 
+            var worldObjects = WorldObjectDatabase.Instance.GetAllWorldObjects();
+
             //Group can bundle many connections and it has inmemory-storage so add any type per group
             (room) = await Group.AddAsync(roomName);
-            Broadcast(room).OnJoin(_worldObjectsStorage.ToArray());
-            return _worldObjectsStorage.ToArray();
+            Broadcast(room).OnJoin(worldObjects);
+            return worldObjects;
         }
 
         public async Task LeaveAsync() {
@@ -38,19 +41,25 @@ namespace Eridu.WorldObjects {
             return CompletedTask;
         }
 
-        async Task IWorldObjectHub.SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms) {
+        async Task<WorldObject> IWorldObjectHub.SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms) {
             //TODO: Check authoritative client
 
             //Are we already tracking this id?
-            var wo = GetExistingWorldObject(worldObject);
+            worldObject.InstanceId = WorldObjectDatabase.Instance.GetAndIncrementNextId();
+            WorldObjectDatabase.Instance?.AddOrUpdate(worldObject);
+            Broadcast(room).OnSpawnWorldObject(worldObject, transforms);
+            return worldObject;
+        }
 
-            if (wo != null) {
-                Console.WriteLine("Tried to spawn an existing world object");
+        Task IWorldObjectHub.ToggleWorldObject(WorldObject worldObject, bool enabled) {
+            var wo = GetExistingWorldObject(worldObject);
+            if(wo == null) {
+                Console.WriteLine("Could not find a world object to toggle.");
             }
             else {
-                _worldObjectsStorage.Add(worldObject);
-                Broadcast(room).OnSpawnWorldObject(worldObject, transforms);
+                Broadcast(room).OnToggleWorldObjectVisibility(worldObject, enabled);
             }
+            return Task.CompletedTask;
         }
 
         Task IWorldObjectHub.PlayAnimation(WorldObject worldObject, string animationName) {
@@ -66,8 +75,7 @@ namespace Eridu.WorldObjects {
         }
 
         Task IWorldObjectHub.DestroyWorldObject(WorldObject worldObject) {
-
-            var wo = GetExistingWorldObject(worldObject);
+            var wo = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
 
             //The object exists in the scene
             if (wo != null) {
@@ -75,15 +83,20 @@ namespace Eridu.WorldObjects {
                     DoReleaseOwner(worldObject, worldObject.OwnerId);
                 }
                 //Remove it from storate
-                _worldObjectsStorage.Remove(worldObject);
+                WorldObjectDatabase.Instance.Remove(worldObject);
                 Broadcast(room).OnDestroyWorldObject(worldObject);
             }
             return Task.CompletedTask;
         }
 
         Task IWorldObjectHub.MoveTransforms(WorldObject worldObject, Matrix4x4[] transforms) {
-            var wo = GetExistingWorldObject(worldObject);
-            if(wo == null){
+            //If authoritative, allow all moves
+
+            //If owned by a client, make sure we're the client that owns it before moving
+
+
+            var wo = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
+            if (wo == null){
                 Console.WriteLine("Could not find a world object to move.");
             }
             else {
@@ -103,7 +116,7 @@ namespace Eridu.WorldObjects {
                 }
             }
 
-            var existingObject = GetExistingWorldObject(worldObject);
+            var existingObject = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
 
             if (existingObject == null) {
                 Console.WriteLine("No matching world object found in storage.");

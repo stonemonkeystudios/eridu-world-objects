@@ -13,6 +13,8 @@ namespace Eridu.WorldObjects
         void OnJoin(WorldObject[] existingObjects);
         void OnLeave();
         void OnSpawnWorldObject(WorldObject worldObject, Matrix4x4 transform);
+
+        void OnToggleWorldObjectVisibility(WorldObject worldObject, bool enabled);
         void OnPlayAnimation(WorldObject worldObject, string animationName);
         void OnDestroyWorldObject(WorldObject worldObject);
         void OnMoveTransforms(WorldObject worldObject, Matrix4x4[] transforms);
@@ -23,7 +25,8 @@ namespace Eridu.WorldObjects
     public interface IWorldObjectHub : IStreamingHub<IWorldObjectHub, IWorldObjectHubReceiver> {
         // return type should be `Task` or `Task<T>`, parameters are free.
         Task<WorldObject[]> JoinAsync(string roomName);
-        Task SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms);
+        Task<WorldObject> SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms);
+        Task ToggleWorldObject(WorldObject worldObject, bool enabled);
         Task PlayAnimation(WorldObject worldObject, string animationName);
         Task DestroyWorldObject(WorldObject worldObject);
         Task MoveTransforms(WorldObject worldObject, Matrix4x4[] transforms);
@@ -42,5 +45,7 @@ namespace Eridu.WorldObjects
         public int OwnerId { get; set; }
         [Key(3)]
         public bool Owned { get; set; }
+        [Key(4)]
+        public bool Enabled { get; set; }
     }
 }

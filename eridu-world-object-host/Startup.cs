@@ -3,7 +3,7 @@ using MessagePack;
 using Grpc.Net.Client;
 using MagicOnion.Server;
 
-namespace HQDotNet.Presence
+namespace Eridu.WorldObjects
 {
     public class Startup
     {
@@ -19,6 +19,7 @@ namespace HQDotNet.Presence
             services.AddGrpc();
             services.AddMagicOnion(); // Add this line
             ConfigureResolvers();
+            WorldObjectDatabase.CreateInstance();
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
