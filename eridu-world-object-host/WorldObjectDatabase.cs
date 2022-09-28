@@ -33,6 +33,10 @@ namespace Eridu.WorldObjects
             return worldObjects.Values.ToArray();
         }
 
+        public void ClearAllWorldObjects() {
+            worldObjects.Clear();
+        }
+
         public void Remove(WorldObject worldObject) {
             if (!worldObjects.ContainsKey(worldObject.InstanceId)) {
                 Console.WriteLine("Tried removing world object that does not exist.");

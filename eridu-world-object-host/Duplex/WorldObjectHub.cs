@@ -4,6 +4,7 @@ using MagicOnion.Server;
 using MagicOnion.Server.Hubs;
 using UnityEngine;
 using System.Linq;
+using Eridu.Common;
 
 namespace Eridu.WorldObjects {
     // Implements RPC service in the server project.
@@ -11,18 +12,21 @@ namespace Eridu.WorldObjects {
     [GroupConfiguration(typeof(ConcurrentDictionaryGroupRepositoryFactory))]
     public class WorldObjectHub : StreamingHubBase<IWorldObjectHub, IWorldObjectHubReceiver>, IWorldObjectHub {
         IGroup room;
+        EriduPlayer self;
 
         List<WorldObject> _worldObjectsStorage = new List<WorldObject>();
         Dictionary<WorldObject, int> ownedObjects = new Dictionary<WorldObject, int>();
+        IInMemoryStorage<EriduPlayer> _clientStorage;
 
         #region IWorldObjectHubCH Methods
 
-        public async Task<WorldObject[]> JoinAsync(string roomName) {
+        public async Task<WorldObject[]> JoinAsync(string roomName, EriduPlayer player) {
+            self = player;
 
             var worldObjects = WorldObjectDatabase.Instance.GetAllWorldObjects();
 
             //Group can bundle many connections and it has inmemory-storage so add any type per group
-            (room) = await Group.AddAsync(roomName);
+            (room, _clientStorage) = await Group.AddAsync(roomName, self);
             Broadcast(room).OnJoin(worldObjects);
             return worldObjects;
         }
@@ -34,6 +38,9 @@ namespace Eridu.WorldObjects {
         }
 
         protected override ValueTask OnDisconnected() {
+            if (self != null && self.IsRoot) {
+                WorldObjectDatabase.Instance.ClearAllWorldObjects();
+            }
             return CompletedTask;
         }
 
@@ -52,25 +59,25 @@ namespace Eridu.WorldObjects {
         }
 
         Task IWorldObjectHub.ToggleWorldObject(WorldObject worldObject, bool enabled) {
-            var wo = GetExistingWorldObject(worldObject);
+            /*var wo = GetExistingWorldObject(worldObject);
             if(wo == null) {
                 Console.WriteLine("Could not find a world object to toggle.");
             }
             else {
                 Broadcast(room).OnToggleWorldObjectVisibility(worldObject, enabled);
-            }
+            }*/
             return Task.CompletedTask;
         }
 
         Task IWorldObjectHub.PlayAnimation(WorldObject worldObject, string animationName) {
 
-            var wo = GetExistingWorldObject(worldObject);
+            /*var wo = GetExistingWorldObject(worldObject);
             if(wo == null) {
                 Console.WriteLine("Could not find a world object to play an animation on.");
             }
             else {
                 BroadcastExceptSelf(room).OnPlayAnimation(worldObject, animationName);
-            }
+            }*/
             return Task.CompletedTask;
         }
 
@@ -108,15 +115,7 @@ namespace Eridu.WorldObjects {
         }
         async Task<bool> IWorldObjectHub.TakeOwnership(WorldObject worldObject, int playerId) {
 
-            //Does an owner exist already?
-            foreach( var key in _worldObjectsStorage){
-                if(key.InstanceId == worldObject.InstanceId && worldObject.Owned) {
-                    //This object is already owned
-                    return false;
-                }
-            }
-
-            var existingObject = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
+            /*var existingObject = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
 
             if (existingObject == null) {
                 Console.WriteLine("No matching world object found in storage.");
@@ -126,7 +125,7 @@ namespace Eridu.WorldObjects {
             //If not, take ownership
             worldObject.Owned = true;
             worldObject.OwnerId = playerId;
-            Broadcast(room).OnTakeOwnership(worldObject, playerId);
+            Broadcast(room).OnTakeOwnership(worldObject, playerId);*/
             return true;
         }
 
@@ -151,7 +150,7 @@ namespace Eridu.WorldObjects {
         #region Private Methods
 
         async void DoReleaseOwner(WorldObject worldObject, int playerId) {
-            foreach (var key in _worldObjectsStorage) {
+            /*foreach (var key in _worldObjectsStorage) {
                 if (key.InstanceId == worldObject.InstanceId){
                     if(key.Owned && key.OwnerId == playerId) {
                         //This object is owned by the requesting player
@@ -161,7 +160,7 @@ namespace Eridu.WorldObjects {
                         return;
                     }
                 }
-            }
+            }*/
         }
 
         private WorldObject GetExistingWorldObject(WorldObject worldObject) {

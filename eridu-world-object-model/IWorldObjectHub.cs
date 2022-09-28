@@ -4,6 +4,7 @@ using MagicOnion;
 using UnityEngine;
 using MessagePack;
 using HQDotNet;
+using Eridu.Common;
 
 namespace Eridu.WorldObjects
 {
@@ -24,7 +25,7 @@ namespace Eridu.WorldObjects
 
     public interface IWorldObjectHub : IStreamingHub<IWorldObjectHub, IWorldObjectHubReceiver> {
         // return type should be `Task` or `Task<T>`, parameters are free.
-        Task<WorldObject[]> JoinAsync(string roomName);
+        Task<WorldObject[]> JoinAsync(string roomName, EriduPlayer player  );
         Task<WorldObject> SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms);
         Task ToggleWorldObject(WorldObject worldObject, bool enabled);
         Task PlayAnimation(WorldObject worldObject, string animationName);
