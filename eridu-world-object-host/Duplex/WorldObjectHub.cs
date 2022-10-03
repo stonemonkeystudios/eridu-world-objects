@@ -39,7 +39,7 @@ namespace Eridu.WorldObjects {
 
         protected override ValueTask OnDisconnected() {
             if (self != null && self.IsRoot) {
-                WorldObjectDatabase.Instance.ClearAllWorldObjects();
+                ClearAndDestroyAllWorldObjects();
             }
             return CompletedTask;
         }
@@ -53,6 +53,7 @@ namespace Eridu.WorldObjects {
 
             //Are we already tracking this id?
             worldObject.InstanceId = WorldObjectDatabase.Instance.GetAndIncrementNextId();
+            worldObject.LastRootPosition = transforms;
             WorldObjectDatabase.Instance?.AddOrUpdate(worldObject);
             Broadcast(room).OnSpawnWorldObject(worldObject, transforms);
             return worldObject;
@@ -103,6 +104,8 @@ namespace Eridu.WorldObjects {
 
 
             var wo = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
+            wo.LastRootPosition = transforms[0];
+            WorldObjectDatabase.Instance.AddOrUpdate(wo);
             if (wo == null){
                 Console.WriteLine("Could not find a world object to move.");
             }
@@ -148,6 +151,13 @@ namespace Eridu.WorldObjects {
         #endregion
 
         #region Private Methods
+
+        async void ClearAndDestroyAllWorldObjects() {
+            foreach(var wo in WorldObjectDatabase.Instance.GetAllWorldObjects()) {
+                await (this as IWorldObjectHub).DestroyWorldObject(wo);
+            }
+            WorldObjectDatabase.Instance.ClearAllWorldObjects();
+        }
 
         async void DoReleaseOwner(WorldObject worldObject, int playerId) {
             /*foreach (var key in _worldObjectsStorage) {

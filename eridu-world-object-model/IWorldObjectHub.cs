@@ -48,5 +48,7 @@ namespace Eridu.WorldObjects
         public bool Owned { get; set; }
         [Key(4)]
         public bool Enabled { get; set; }
+        [Key(5)]
+        public Matrix4x4 LastRootPosition { get; set; }
     }
 }
