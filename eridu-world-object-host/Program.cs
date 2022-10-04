@@ -19,7 +19,7 @@ namespace Eridu.WorldObjects {
                     webBuilder
                         .UseKestrel(options => {
                             // WORKAROUND: Accept HTTP/2 only to allow insecure HTTP/2 connections during development.
-                            options.ListenAnyIP(5003, listenOptions => { listenOptions.Protocols = HttpProtocols.Http2; });
+                            options.ListenAnyIP(443, listenOptions => { listenOptions.Protocols = HttpProtocols.Http2; });
                             options.AllowAlternateSchemes = true;
                         })
                         .UseStartup<Startup>();

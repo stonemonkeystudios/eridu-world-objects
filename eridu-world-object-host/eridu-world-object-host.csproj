@@ -8,7 +8,7 @@
     <UserSecretsId>8ca182d0-5c14-4785-b7c6-9220bdef79eb</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <OutputType>Exe</OutputType>
-	<DockerfileRunArguments>-p 5003:5003</DockerfileRunArguments>
+	<DockerfileRunArguments>-p 443:443</DockerfileRunArguments>
 	   <DockerFileBuildArguments>--no-cache --pull</DockerFileBuildArguments>
   </PropertyGroup>
 
