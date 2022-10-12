@@ -23,10 +23,11 @@ namespace Eridu.WorldObjects {
         public async Task<WorldObject[]> JoinAsync(string roomName, EriduPlayer player) {
             self = player;
 
-            var worldObjects = WorldObjectDatabase.Instance.GetAllWorldObjects();
-
             //Group can bundle many connections and it has inmemory-storage so add any type per group
             (room, _clientStorage) = await Group.AddAsync(roomName, self);
+
+            var worldObjects = WorldObjectDatabase.Instance?.GetOrAddRoom(room.GroupName).GetAllWorldObjects();
+
             Broadcast(room).OnJoin(worldObjects);
             return worldObjects;
         }
@@ -48,13 +49,15 @@ namespace Eridu.WorldObjects {
             return CompletedTask;
         }
 
-        async Task<WorldObject> IWorldObjectHub.SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms) {
+        public async Task<WorldObject> SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms) {
+            var obj = new object();
             //TODO: Check authoritative client
 
             //Are we already tracking this id?
-            worldObject.InstanceId = WorldObjectDatabase.Instance.GetAndIncrementNextId();
+            worldObject.InstanceId = WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).GetAndIncrementNextId();
             worldObject.LastRootPosition = transforms;
-            WorldObjectDatabase.Instance?.AddOrUpdate(worldObject);
+            WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).AddOrUpdate(worldObject);
+
             Broadcast(room).OnSpawnWorldObject(worldObject, transforms);
             return worldObject;
         }
@@ -83,7 +86,7 @@ namespace Eridu.WorldObjects {
         }
 
         Task IWorldObjectHub.DestroyWorldObject(WorldObject worldObject) {
-            var wo = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
+            var wo = WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).GetWorldObjectForId(worldObject.InstanceId);
 
             //The object exists in the scene
             if (wo != null) {
@@ -91,7 +94,11 @@ namespace Eridu.WorldObjects {
                     DoReleaseOwner(worldObject, worldObject.OwnerId);
                 }
                 //Remove it from storate
-                WorldObjectDatabase.Instance.Remove(worldObject);
+                WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).Remove(worldObject);
+
+
+
+
                 Broadcast(room).OnDestroyWorldObject(worldObject);
             }
             return Task.CompletedTask;
@@ -103,9 +110,12 @@ namespace Eridu.WorldObjects {
             //If owned by a client, make sure we're the client that owns it before moving
 
 
-            var wo = WorldObjectDatabase.Instance.GetWorldObjectForId(worldObject.InstanceId);
+            var wo = WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).GetWorldObjectForId(worldObject.InstanceId);
+            if(wo == null) {
+                return Task.CompletedTask;
+            }
             wo.LastRootPosition = transforms[0];
-            WorldObjectDatabase.Instance.AddOrUpdate(wo);
+            WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).AddOrUpdate(wo);
             if (wo == null){
                 Console.WriteLine("Could not find a world object to move.");
             }
@@ -153,10 +163,10 @@ namespace Eridu.WorldObjects {
         #region Private Methods
 
         async void ClearAndDestroyAllWorldObjects() {
-            foreach(var wo in WorldObjectDatabase.Instance.GetAllWorldObjects()) {
+            foreach(var wo in WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).GetAllWorldObjects()) {
                 await (this as IWorldObjectHub).DestroyWorldObject(wo);
             }
-            WorldObjectDatabase.Instance.ClearAllWorldObjects();
+            WorldObjectDatabase.Instance.RemoveWorldObjectRoom(room.GroupName);
         }
 
         async void DoReleaseOwner(WorldObject worldObject, int playerId) {

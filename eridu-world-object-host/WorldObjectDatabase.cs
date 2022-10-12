@@ -3,8 +3,7 @@
 namespace Eridu.WorldObjects
 {
     public class WorldObjectDatabase {
-        public int worldObjectId = 0;
-        private Dictionary<int, WorldObject> worldObjects = new Dictionary<int, WorldObject>();
+        public Dictionary<string, WorldObjectRoom> worldObjectRooms = new Dictionary<string, WorldObjectRoom>();
 
         private static WorldObjectDatabase? _instance;
         public static WorldObjectDatabase? Instance {
@@ -12,6 +11,30 @@ namespace Eridu.WorldObjects
                 return _instance;
             }
         }
+
+        public WorldObjectRoom GetOrAddRoom(string roomName) {
+            if(!worldObjectRooms.ContainsKey(roomName))
+                worldObjectRooms.Add(roomName, new WorldObjectRoom());
+            return worldObjectRooms[roomName];
+        }
+
+        public void RemoveWorldObjectRoom(string roomName) {
+            if (worldObjectRooms.ContainsKey(roomName))
+                worldObjectRooms.Remove(roomName);
+        }
+
+        public static void CreateInstance() {
+            _instance = new WorldObjectDatabase();
+        }
+
+        public static void ClearInstance() {
+            _instance = null;
+        }
+    }
+
+    public class WorldObjectRoom {
+        public int worldObjectId = 0;
+        private Dictionary<int, WorldObject> worldObjects = new Dictionary<int, WorldObject>();
 
         public void AddOrUpdate(WorldObject worldObject) {
             if (worldObjects.ContainsKey(worldObject.InstanceId)) {
@@ -50,14 +73,6 @@ namespace Eridu.WorldObjects
             int woId = worldObjectId;
             worldObjectId++;
             return woId;
-        }
-
-        public static void CreateInstance() {
-            _instance = new WorldObjectDatabase();
-        }
-
-        public static void ClearInstance() {
-            _instance = null;
         }
     }
 }
