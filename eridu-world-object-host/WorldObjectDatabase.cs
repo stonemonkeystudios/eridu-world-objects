@@ -33,8 +33,35 @@ namespace Eridu.WorldObjects
     }
 
     public class WorldObjectRoom {
+        private class EriduData {
+            public string dataType;
+            public string data;
+        }
         public int worldObjectId = 0;
         private Dictionary<int, WorldObject> worldObjects = new Dictionary<int, WorldObject>();
+        private Dictionary<int, Dictionary<string, string>> worldObjectData = new Dictionary<int, Dictionary<string, string>>();
+
+        public void AddOrUpdateData(int instanceId, string dataType, string data) {
+            if (!worldObjectData.ContainsKey(instanceId)) {
+                worldObjectData.Add(instanceId, new Dictionary<string, string>());
+            }
+            if (worldObjectData[instanceId].ContainsKey(dataType)) {
+                worldObjectData[instanceId][dataType] = data;
+            }
+            else {
+                worldObjectData[instanceId].Add(dataType, data);
+            }
+        }
+
+        public WorldObjectData[] GetAllWorldObjectData() {
+            List<WorldObjectData> worldObjectDatas = new List<WorldObjectData>();
+            foreach (var instanceid in worldObjectData.Keys) {
+                foreach(var dataType in worldObjectData[instanceid].Keys) {
+                    worldObjectDatas.Add(new WorldObjectData() { instanceId = instanceid, dataType = dataType, data = worldObjectData[instanceid][dataType] });
+                }
+            }
+            return worldObjectDatas.ToArray();
+        }
 
         public void AddOrUpdate(WorldObject worldObject) {
             if (worldObjects.ContainsKey(worldObject.InstanceId)) {
@@ -58,6 +85,7 @@ namespace Eridu.WorldObjects
 
         public void ClearAllWorldObjects() {
             worldObjects.Clear();
+            worldObjectData.Clear();
         }
 
         public void Remove(WorldObject worldObject) {
@@ -66,6 +94,9 @@ namespace Eridu.WorldObjects
             }
             else {
                 worldObjects.Remove(worldObject.InstanceId);
+            }
+            if(worldObjectData.ContainsKey(worldObject.InstanceId)) {
+                worldObjectData.Remove(worldObject.InstanceId);
             }
         }
 

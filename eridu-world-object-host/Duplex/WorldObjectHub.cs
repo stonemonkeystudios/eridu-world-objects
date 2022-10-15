@@ -62,6 +62,11 @@ namespace Eridu.WorldObjects {
             return worldObject;
         }
 
+        public async Task SendData(int instanceId, string dataType, string data) {
+            WorldObjectDatabase.Instance.GetOrAddRoom(room.GroupName).AddOrUpdateData(instanceId, dataType, data);
+            Broadcast(room).OnReceivedData(instanceId, dataType, data);
+        }
+
         Task IWorldObjectHub.ToggleWorldObject(WorldObject worldObject, bool enabled) {
             /*var wo = GetExistingWorldObject(worldObject);
             if(wo == null) {

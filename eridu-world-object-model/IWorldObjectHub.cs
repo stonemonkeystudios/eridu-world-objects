@@ -14,7 +14,7 @@ namespace Eridu.WorldObjects
         void OnJoin(WorldObject[] existingObjects);
         void OnLeave();
         void OnSpawnWorldObject(WorldObject worldObject, Matrix4x4 transform);
-
+        void OnReceivedData(int instanceId, string dataType, string data);
         void OnToggleWorldObjectVisibility(WorldObject worldObject, bool enabled);
         void OnPlayAnimation(WorldObject worldObject, string animationName);
         void OnDestroyWorldObject(WorldObject worldObject);
@@ -28,6 +28,7 @@ namespace Eridu.WorldObjects
         Task<WorldObject[]> JoinAsync(string roomName, EriduPlayer player  );
         Task<WorldObject> SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms);
         Task ToggleWorldObject(WorldObject worldObject, bool enabled);
+        Task SendData(int instanceId, string dataType, string data);
         Task PlayAnimation(WorldObject worldObject, string animationName);
         Task DestroyWorldObject(WorldObject worldObject);
         Task MoveTransforms(WorldObject worldObject, Matrix4x4[] transforms);
