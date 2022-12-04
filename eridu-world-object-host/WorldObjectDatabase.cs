@@ -37,7 +37,7 @@ namespace Eridu.WorldObjects
             public string dataType;
             public string data;
         }
-        public int worldObjectId = 0;
+        public int worldObjectId = 1;
         private Dictionary<int, WorldObject> worldObjects = new Dictionary<int, WorldObject>();
         private Dictionary<int, Dictionary<string, string>> worldObjectData = new Dictionary<int, Dictionary<string, string>>();
 
