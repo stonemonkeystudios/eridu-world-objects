@@ -10,7 +10,7 @@ namespace Eridu.WorldObjects {
     // Implements RPC service in the server project.
     // The implementation class must inherit `ServiceBase<IMyFirstService>` and `IMyFirstService`
     [GroupConfiguration(typeof(ConcurrentDictionaryGroupRepositoryFactory))]
-    public class WorldObjectHub : StreamingHubBase<IWorldObjectHub, IWorldObjectHubReceiver>, IWorldObjectHub {
+    public class WorldObjectHub : StreamingHubBase<IWorldObjectHub, IWorldObjectHubReceiver>, IWorldObjectHub { 
         IGroup room;
         EriduPlayer self;
 
