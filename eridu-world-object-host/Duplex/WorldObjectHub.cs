@@ -49,6 +49,11 @@ namespace Eridu.WorldObjects {
             return CompletedTask;
         }
 
+        public async Task<WorldObject[]> GetAllWorldObjectsInRoom() {
+            var worldObjects = WorldObjectDatabase.Instance?.GetOrAddRoom(room.GroupName).GetAllWorldObjects();
+            return worldObjects;
+        }
+
         public async Task<WorldObject> SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms) {
             var obj = new object();
             //TODO: Check authoritative client

@@ -27,6 +27,7 @@ namespace Eridu.WorldObjects
         // return type should be `Task` or `Task<T>`, parameters are free.
         Task<WorldObject[]> JoinAsync(string roomName, EriduPlayer player  );
         Task<WorldObject> SpawnWorldObject(WorldObject worldObject, Matrix4x4 transforms);
+        Task<WorldObject[]> GetAllWorldObjectsInRoom();
         Task ToggleWorldObject(WorldObject worldObject, bool enabled);
         Task SendData(int instanceId, string dataType, string data);
         Task PlayAnimation(WorldObject worldObject, string animationName);
