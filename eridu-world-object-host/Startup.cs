@@ -37,7 +37,7 @@ namespace Eridu.WorldObjects
             {
                 /*var servDef = app.ApplicationServices.GetService<MagicOnionServiceDefinition>();
                 if(servDef != null) {
-                    endpoints.MapMagicOnionHttpGateway("_", servDef.MethodHandlers, GrpcChannel.ForAddress("http://localhost:443"));
+                    endpoints.MapMagicOnionHttpGateway("_", servDef.MethodHandlers, GrpcChannel.ForAddress("http://localhost:5001"));
                     endpoints.MapMagicOnionSwagger("swagger", servDef.MethodHandlers, "/_/");
                 }*/
 
