@@ -10,6 +10,7 @@
     <OutputType>Exe</OutputType>
 	<DockerfileRunArguments>-p 5001:5001</DockerfileRunArguments>
 	   <DockerFileBuildArguments>--no-cache --pull</DockerFileBuildArguments>
+	   <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
   </PropertyGroup>
 
   <ItemGroup>
