@@ -11,6 +11,8 @@
 	<DockerfileRunArguments>-p 5001:5001</DockerfileRunArguments>
 	   <DockerFileBuildArguments>--no-cache --pull</DockerFileBuildArguments>
 	   <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+	  <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+	  <GenerateDependencyFile>true</GenerateDependencyFile>
   </PropertyGroup>
 
   <ItemGroup>
