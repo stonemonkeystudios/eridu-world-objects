@@ -20,4 +20,4 @@ RUN dotnet publish -c Release -o /app/publish
 
 FROM base AS deploy
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "eridu-world-object-host.dll"]
+ENTRYPOINT ["dotnet", "eridu-world-object-host.dll"] 
