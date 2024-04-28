@@ -4,7 +4,7 @@
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HTTPS_PORT": "5001"
+        "ASPNETCORE_HTTPS_PORT": "443"
       },
       "GRPC_TRACE": "all",
       "GRPC_VERBOSITY": "debug",
@@ -19,7 +19,7 @@
         "DOTNET_ENVIRONMENT": "Development"
       },
       "publishAllPorts": true,
-      "useSSL": true
+      "useSSL": false
     },
     "HQDotNet.Server (Production)": {
       "commandName": "Project",
