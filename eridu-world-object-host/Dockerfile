@@ -6,7 +6,7 @@ ENV DOTNET_ENVIRONMENT=Production
 ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 5001
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY eridu-world-object-host/. eridu-world-object-host/
 COPY eridu-world-object-model/. eridu-world-object-model/
