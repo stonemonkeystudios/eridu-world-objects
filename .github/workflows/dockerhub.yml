@@ -21,3 +21,23 @@ jobs:
       
     - name: Push Docker image to Docker Hub
       run: docker push yourusername/yourimage:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Kubeconfig
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 --decode > $HOME/.kube/config
+    - name: Install Helm
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  
+    - name: Upgrade Helm Chart
+      run: helm upgrade --install eridu-world-objects charts/eridu-world-objects/ --namespace default
+
