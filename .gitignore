@@ -350,3 +350,6 @@ MigrationBackup/
 .ionide/
 eridu-world-object-host/eridu-world-object-host.zip
 *.zip
+
+.secrets
+.DS_Store
