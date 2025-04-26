@@ -25,6 +25,7 @@ namespace Eridu.WorldObjects {
 
             //Group can bundle many connections and it has inmemory-storage so add any type per group
             (room, _clientStorage) = await Group.AddAsync(roomName, self);
+            ClientStorage.Instance.AddClient(self.clientId, this.Context.ContextId);
 
             var worldObjects = WorldObjectDatabase.Instance?.GetOrAddRoom(room.GroupName).GetAllWorldObjects();
 
@@ -34,6 +35,7 @@ namespace Eridu.WorldObjects {
 
         public async Task LeaveAsync() {
             if (room != null) {
+                ClientStorage.Instance.RemoveClient(self.clientId);
                 await room.RemoveAsync(this.Context);
             }
         }
